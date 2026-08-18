@@ -12,3 +12,7 @@ dist/
 # OS
 .DS_Store
 Thumbs.db
+
+# App settings (contains environment-specific connection strings)
+PatchlabTicketing.Api/appsettings.json
+PatchlabTicketing.Api/appsettings.Development.json

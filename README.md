@@ -1,0 +1,48 @@
+# PatchlabTicketing
+
+Support ticket dashboard for Patchlab. Reads and displays tickets from the shared `Patchlab.Tickets` SQL table, the same table `PatchlabWhatsAppBot` writes to.
+
+## Stack
+
+- **API**: ASP.NET Core Web API, Dapper for data access
+- **Client**: React (Vite), polling-based refresh
+- **Database**: SQL Server, `Patchlab` database, `Tickets` table (shared with `PatchlabWhatsAppBot`, not owned by this repo)
+
+## Architecture
+
+No HTTP contract between this app and `PatchlabWhatsAppBot`. Both read/write the same SQL table directly, the database is the interface.
+
+## Project structure
+
+PatchlabTicketing/
+├── PatchlabTicketing.Api/ ASP.NET Core Web API
+└── patchlabticketing.client/ React dashboard (Vite)
+
+## Running locally
+
+**API:**
+
+1. Open `PatchlabTicketing.Api/PatchlabTicketing.Api.slnx` in Visual Studio
+2. Confirm `appsettings.json` connection string points at your local or server SQL instance
+3. Run, should open Swagger at `https://localhost:7168/swagger`
+
+**Client:**
+
+1. Open `patchlabticketing.client/` in VS Code (or any editor)
+2. `npm install`
+3. `npm run dev`
+4. Open `http://localhost:5173`
+
+Both need to be running at the same time for the dashboard to load ticket data.
+
+## Status
+
+Current phase: read-only dashboard. No authentication, no ticket editing yet.
+
+Status values: `Open` (green), `Closed` (blue). More states may be added once the manual chat takeover flow is designed.
+
+## Roadmap
+
+- Manual takeover / conversation view page
+- Ticket status editing (close, reopen)
+- Authentication
