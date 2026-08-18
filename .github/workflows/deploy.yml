@@ -1,0 +1,39 @@
+name: Deploy Patchlab Ticketing
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: self-hosted
+
+    steps:
+      - name: Checkout latest code
+        uses: actions/checkout@v4
+
+      - name: Install client dependencies
+        run: npm install
+        working-directory: patchlabticketing.client
+
+      - name: Build React client
+        run: npm run build
+        working-directory: patchlabticketing.client
+
+      - name: Stop PatchlabTicketing service
+        run: C:\nssm\win64\nssm.exe stop PatchlabTicketing
+
+      - name: Clear old wwwroot
+        run: if (Test-Path PatchlabTicketing.Api\wwwroot) { Remove-Item -Recurse -Force PatchlabTicketing.Api\wwwroot }
+        shell: powershell
+
+      - name: Copy client build into API wwwroot
+        run: Copy-Item -Recurse patchlabticketing.client\dist PatchlabTicketing.Api\wwwroot
+        shell: powershell
+
+      - name: Publish PatchlabTicketing.Api
+        run: dotnet publish PatchlabTicketing.Api\PatchlabTicketing.Api.csproj -c Release -o C:\PatchlabTicketing\publish
+
+      - name: Start PatchlabTicketing service
+        run: C:\nssm\win64\nssm.exe start PatchlabTicketing
