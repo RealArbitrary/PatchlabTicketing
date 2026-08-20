@@ -1,7 +1,12 @@
 import { useState } from "react";
 
-function Navbar() {
+function Navbar({ activeView, onNavigate }) {
   const [menuOpen, setMenuOpen] = useState(false);
+
+  function handleNavClick(view) {
+    onNavigate(view);
+    setMenuOpen(false);
+  }
 
   return (
     <header className="navbar">
@@ -22,14 +27,28 @@ function Navbar() {
 
       {menuOpen && (
         <nav className="side-menu">
-          <a href="/" className="side-menu-link active">
+          <a
+            href="#"
+            className={`side-menu-link ${activeView === "tickets" ? "active" : ""}`}
+            onClick={(e) => {
+              e.preventDefault();
+              handleNavClick("tickets");
+            }}
+          >
             Tickets
           </a>
           <a href="#" className="side-menu-link disabled">
             Conversations
           </a>
-          <a href="#" className="side-menu-link disabled">
-            Settings
+          <a
+            href="#"
+            className={`side-menu-link ${activeView === "errors" ? "active" : ""}`}
+            onClick={(e) => {
+              e.preventDefault();
+              handleNavClick("errors");
+            }}
+          >
+            Error Logs
           </a>
         </nav>
       )}

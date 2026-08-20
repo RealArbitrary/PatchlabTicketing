@@ -1,0 +1,39 @@
+.error-log-table {
+  margin: 1.5rem;
+}
+
+.error-log-source {
+  font-family: monospace;
+  font-size: 0.8rem;
+  color: var(--color-text-secondary);
+}
+
+.error-log-message {
+  max-width: 480px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.severity-badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  border: 1px solid transparent;
+}
+
+.severity-error {
+  color: #f87171;
+  border-color: #f87171;
+  background-color: rgba(248, 113, 113, 0.08);
+}
+
+.severity-warning {
+  color: #fbbf24;
+  border-color: #fbbf24;
+  background-color: rgba(251, 191, 36, 0.08);
+}

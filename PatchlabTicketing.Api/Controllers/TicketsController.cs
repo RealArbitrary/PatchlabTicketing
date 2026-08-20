@@ -32,4 +32,12 @@ public class TicketsController : ControllerBase
 
         return NoContent();
     }
+
+    [HttpGet("{ticketNumber}/feedback")]
+    public async Task<IActionResult> GetFeedback(string ticketNumber, [FromServices] TicketFeedbackRepository feedbackRepo)
+    {
+        var feedback = await feedbackRepo.GetByTicketNumberAsync(ticketNumber);
+        return Ok(feedback);
+    }
+
 }
