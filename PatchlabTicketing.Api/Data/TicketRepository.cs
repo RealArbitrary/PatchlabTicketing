@@ -20,4 +20,12 @@ public class TicketRepository
         const string sql = "SELECT Id, TicketNumber, CellphoneNumber, Issue, CreatedAt, Status FROM Tickets ORDER BY Id DESC";
         return await conn.QueryAsync<Ticket>(sql);
     }
+
+    public async Task<bool> CloseTicketAsync(string ticketNumber)
+    {
+        using var conn = new SqlConnection(_connectionString);
+        const string sql = "UPDATE Tickets SET Status = 'Closed' WHERE TicketNumber = @TicketNumber";
+        var rowsAffected = await conn.ExecuteAsync(sql, new { TicketNumber = ticketNumber });
+        return rowsAffected > 0;
+    }
 }

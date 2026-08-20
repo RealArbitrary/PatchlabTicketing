@@ -20,4 +20,16 @@ public class TicketsController : ControllerBase
         var tickets = await _repo.GetAllAsync();
         return Ok(tickets);
     }
+
+    [HttpPut("{ticketNumber}/close")]
+    public async Task<IActionResult> Close(string ticketNumber)
+    {
+        var success = await _repo.CloseTicketAsync(ticketNumber);
+        if (!success)
+        {
+            return NotFound();
+        }
+
+        return NoContent();
+    }
 }
