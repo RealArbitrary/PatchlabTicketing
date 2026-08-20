@@ -9,6 +9,7 @@ builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 
 builder.Services.AddScoped<TicketRepository>();
+builder.Services.AddScoped<ErrorLogRepository>();
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowReactDev", policy =>
