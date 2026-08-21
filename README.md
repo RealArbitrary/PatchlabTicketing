@@ -37,12 +37,14 @@ Both need to be running at the same time for the dashboard to load ticket data.
 
 ## Status
 
-Current phase: read-only dashboard. No authentication, no ticket editing yet.
+Tickets can be viewed and closed, and each ticket row expands inline to show its feedback and comment thread (with the ability to add new comments). A separate Error Logs view is also available from the nav. No authentication yet, and conversation takeover is not implemented (the "Conversations" nav entry is present but disabled).
 
 Status values: `Open` (green), `Closed` (blue). More states may be added once the manual chat takeover flow is designed.
+
+The API exposes four resources: tickets, ticket comments, ticket feedback, and error logs.
 
 ## Roadmap
 
 - Manual takeover / conversation view page
-- Ticket status editing (close, reopen)
+- Ticket reopening
 - Authentication
