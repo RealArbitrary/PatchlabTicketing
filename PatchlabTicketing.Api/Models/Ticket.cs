@@ -9,4 +9,6 @@ public class Ticket
     public string? Area { get; set; }
     public DateTime CreatedAt { get; set; }
     public string Status { get; set; } = string.Empty;
+    public string? FirstName { get; set; }
+    public string? LastName { get; set; }
 }

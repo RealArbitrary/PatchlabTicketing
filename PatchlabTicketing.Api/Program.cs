@@ -1,16 +1,22 @@
 using PatchlabTicketing.Api.Data;
+using PatchlabTicketing.Api.Json;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.Converters.Add(new UtcDateTimeConverter());
+    });
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 
 builder.Services.AddScoped<TicketRepository>();
 builder.Services.AddScoped<ErrorLogRepository>();
 builder.Services.AddScoped<TicketFeedbackRepository>();
+builder.Services.AddScoped<TicketCommentRepository>();
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowReactDev", policy =>

@@ -1,5 +1,11 @@
 import { Fragment, useEffect, useState } from "react";
-import { getTickets, closeTicket, getTicketFeedback } from "../api/tickets";
+import {
+  getTickets,
+  closeTicket,
+  getTicketFeedback,
+  getTicketComments,
+  addTicketComment,
+} from "../api/tickets";
 import StatusBadge from "./StatusBadge";
 
 const POLL_INTERVAL_MS = 5000;
@@ -14,6 +20,11 @@ function TicketList() {
   const [feedbackCache, setFeedbackCache] = useState({});
   const [feedbackLoading, setFeedbackLoading] = useState({});
   const [feedbackError, setFeedbackError] = useState({});
+  const [commentCache, setCommentCache] = useState({});
+  const [commentLoading, setCommentLoading] = useState({});
+  const [commentError, setCommentError] = useState({});
+  const [newCommentText, setNewCommentText] = useState({});
+  const [savingCommentId, setSavingCommentId] = useState(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -83,6 +94,47 @@ function TicketList() {
     }
   }
 
+  async function fetchCommentsIfNeeded(ticket) {
+    if (commentCache[ticket.id]) return;
+
+    setCommentLoading((prev) => ({ ...prev, [ticket.id]: true }));
+    setCommentError((prev) => ({ ...prev, [ticket.id]: null }));
+
+    try {
+      const data = await getTicketComments(ticket.ticketNumber);
+      setCommentCache((prev) => ({ ...prev, [ticket.id]: data }));
+    } catch {
+      setCommentError((prev) => ({
+        ...prev,
+        [ticket.id]: "Could not load comments.",
+      }));
+    } finally {
+      setCommentLoading((prev) => ({ ...prev, [ticket.id]: false }));
+    }
+  }
+
+  async function handleAddComment(ticket) {
+    const text = (newCommentText[ticket.id] || "").trim();
+    if (!text) return;
+
+    setSavingCommentId(ticket.id);
+    setCommentError((prev) => ({ ...prev, [ticket.id]: null }));
+
+    try {
+      await addTicketComment(ticket.ticketNumber, text);
+      const data = await getTicketComments(ticket.ticketNumber);
+      setCommentCache((prev) => ({ ...prev, [ticket.id]: data }));
+      setNewCommentText((prev) => ({ ...prev, [ticket.id]: "" }));
+    } catch {
+      setCommentError((prev) => ({
+        ...prev,
+        [ticket.id]: "Failed to save comment.",
+      }));
+    } finally {
+      setSavingCommentId(null);
+    }
+  }
+
   function handleRowClick(ticket) {
     setExpandedIds((prev) => {
       const next = new Set(prev);
@@ -96,12 +148,16 @@ function TicketList() {
 
     if (!expandedIds.has(ticket.id)) {
       fetchFeedbackIfNeeded(ticket);
+      fetchCommentsIfNeeded(ticket);
     }
   }
 
   function handleExpandAll() {
     setExpandedIds(new Set(tickets.map((t) => t.id)));
-    tickets.forEach((ticket) => fetchFeedbackIfNeeded(ticket));
+    tickets.forEach((ticket) => {
+      fetchFeedbackIfNeeded(ticket);
+      fetchCommentsIfNeeded(ticket);
+    });
   }
 
   function handleCollapseAll() {
@@ -138,6 +194,7 @@ function TicketList() {
         <thead>
           <tr>
             <th>Ticket</th>
+            <th>Name</th>
             <th>Cellphone</th>
             <th>Issue</th>
             <th>Created</th>
@@ -154,6 +211,10 @@ function TicketList() {
                 onClick={() => handleRowClick(ticket)}
               >
                 <td>{ticket.ticketNumber}</td>
+                <td>
+                  {`${ticket.firstName ?? ""} ${ticket.lastName ?? ""}`.trim() ||
+                    "—"}
+                </td>
                 <td>{ticket.cellphoneNumber}</td>
                 <td>{ticket.issue}</td>
                 <td>{new Date(ticket.createdAt).toLocaleString()}</td>
@@ -181,7 +242,7 @@ function TicketList() {
               </tr>
               {expandedIds.has(ticket.id) && (
                 <tr className="ticket-feedback-row">
-                  <td colSpan={7}>
+                  <td colSpan={8}>
                     {feedbackLoading[ticket.id] && (
                       <p className="ticket-status-message">
                         Loading feedback...
@@ -223,6 +284,68 @@ function TicketList() {
                           ))}
                         </ul>
                       ))}
+
+                    <div className="comments-section">
+                      <h4 className="comments-heading">Comments</h4>
+
+                      {commentLoading[ticket.id] && (
+                        <p className="ticket-status-message">
+                          Loading comments...
+                        </p>
+                      )}
+                      {commentError[ticket.id] && (
+                        <p className="ticket-status-message ticket-status-error">
+                          {commentError[ticket.id]}
+                        </p>
+                      )}
+                      {commentCache[ticket.id] &&
+                        (commentCache[ticket.id].length === 0 ? (
+                          <p className="ticket-status-message">
+                            No comments yet.
+                          </p>
+                        ) : (
+                          <ul className="comment-list">
+                            {commentCache[ticket.id].map((c) => (
+                              <li key={c.id} className="comment-item">
+                                <span className="comment-text">
+                                  {c.comment}
+                                </span>
+                                <span className="comment-date">
+                                  {new Date(c.createdAt).toLocaleString()}
+                                </span>
+                              </li>
+                            ))}
+                          </ul>
+                        ))}
+
+                      <div
+                        className="comment-input-row"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <input
+                          type="text"
+                          className="comment-input"
+                          placeholder="Add a comment..."
+                          value={newCommentText[ticket.id] || ""}
+                          onChange={(e) =>
+                            setNewCommentText((prev) => ({
+                              ...prev,
+                              [ticket.id]: e.target.value,
+                            }))
+                          }
+                        />
+                        <button
+                          className="action-btn action-btn-active"
+                          onClick={() => handleAddComment(ticket)}
+                          disabled={
+                            savingCommentId === ticket.id ||
+                            !(newCommentText[ticket.id] || "").trim()
+                          }
+                        >
+                          {savingCommentId === ticket.id ? "Saving..." : "Save"}
+                        </button>
+                      </div>
+                    </div>
                   </td>
                 </tr>
               )}

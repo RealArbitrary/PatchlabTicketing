@@ -40,4 +40,19 @@ public class TicketsController : ControllerBase
         return Ok(feedback);
     }
 
+    [HttpGet("{ticketNumber}/comments")]
+    public async Task<IActionResult> GetComments(string ticketNumber, [FromServices] TicketCommentRepository repo)
+    {
+        var comments = await repo.GetByTicketNumberAsync(ticketNumber);
+        return Ok(comments);
+    }
+
+    [HttpPost("{ticketNumber}/comments")]
+    public async Task<IActionResult> AddComment(string ticketNumber, [FromBody] AddCommentRequest request, [FromServices] TicketCommentRepository repo)
+    {
+        if (string.IsNullOrWhiteSpace(request.Comment)) return BadRequest();
+        await repo.AddAsync(ticketNumber, request.Comment);
+        return NoContent();
+    }
+
 }

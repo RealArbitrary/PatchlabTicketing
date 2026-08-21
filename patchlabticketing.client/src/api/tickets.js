@@ -17,3 +17,16 @@ export async function getTicketFeedback(ticketNumber) {
   );
   return response.data;
 }
+
+export async function getTicketComments(ticketNumber) {
+  const response = await axios.get(
+    `${API_BASE_URL}/Tickets/${ticketNumber}/comments`,
+  );
+  return response.data;
+}
+
+export async function addTicketComment(ticketNumber, comment) {
+  await axios.post(`${API_BASE_URL}/Tickets/${ticketNumber}/comments`, {
+    comment,
+  });
+}

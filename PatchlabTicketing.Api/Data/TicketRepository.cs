@@ -17,7 +17,12 @@ public class TicketRepository
     public async Task<IEnumerable<Ticket>> GetAllAsync()
     {
         using var conn = new SqlConnection(_connectionString);
-        const string sql = "SELECT Id, TicketNumber, CellphoneNumber, Issue, Area, CreatedAt, Status FROM Tickets ORDER BY Id DESC";
+        const string sql = @"
+        SELECT t.Id, t.TicketNumber, t.CellphoneNumber, t.Issue, t.Area, t.CreatedAt, t.Status,
+               c.FirstName, c.LastName
+        FROM Tickets t
+        LEFT JOIN Customers c ON c.CellphoneNumber = t.CellphoneNumber
+        ORDER BY t.Id DESC";
         return await conn.QueryAsync<Ticket>(sql);
     }
 
@@ -29,15 +34,5 @@ public class TicketRepository
         return rowsAffected > 0;
     }
 
-    public async Task<IEnumerable<TicketFeedback>> GetByTicketNumberAsync(string ticketNumber)
-    {
-        using var conn = new SqlConnection(_connectionString);
-        const string sql = @"
-            SELECT f.Id, f.Status, f.Reason, f.CreatedAt
-            FROM TicketFeedback f
-            INNER JOIN Tickets t ON t.Id = f.TicketId
-            WHERE t.TicketNumber = @TicketNumber
-            ORDER BY f.CreatedAt DESC";
-        return await conn.QueryAsync<TicketFeedback>(sql, new { TicketNumber = ticketNumber });
-    }
+    
 }
