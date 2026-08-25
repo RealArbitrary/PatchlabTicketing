@@ -1,26 +1,16 @@
--- Archive table for hard-deleted tickets.
--- Standalone: no foreign keys back to Tickets/TicketComments/TicketFeedback,
--- since those live rows are gone by the time a row lands here.
--- TicketId preserves the original Tickets.Id for reference; it is not an identity here.
-
-IF NOT EXISTS (SELECT 1 FROM sys.tables WHERE name = 'DeletedTickets')
-BEGIN
-    CREATE TABLE dbo.DeletedTickets
-    (
-        ArchiveId        INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
-        TicketId         INT NOT NULL,
-        TicketNumber     VARCHAR(9) NULL,
-        CellphoneNumber  NVARCHAR(40) NOT NULL,
-        Issue            NVARCHAR(MAX) NOT NULL,
-        Area             NVARCHAR(400) NULL,
-        CreatedAt        DATETIME2 NOT NULL,
-        ResolvedAt       DATETIME2 NULL,
-        Status           NVARCHAR(40) NOT NULL,
-        CommentsJson     NVARCHAR(MAX) NULL,
-        FeedbackJson     NVARCHAR(MAX) NULL,
-        DeletedAt        DATETIME2 NOT NULL DEFAULT (GETUTCDATE())
-    );
-
-    CREATE INDEX IX_DeletedTickets_DeletedAt ON dbo.DeletedTickets (DeletedAt);
-END
-GO
+-- SUPERSEDED — do not run this against any environment.
+--
+-- DeletedTickets is a table in the shared `Patchlab` database, which this repo
+-- (Dapper-only, no EF Core, no migrations) does not own the schema for. Schema
+-- for the shared database — including this table — is owned by
+-- PatchlabWhatsAppBot via EF Core migrations (see its AddResolvedAtToTickets
+-- migration for the pattern this table now follows: AddDeletedTicketsTable,
+-- or equivalent).
+--
+-- This script originally created DeletedTickets by hand against local dev
+-- only. It had no auto-apply path, so it never reached production, and the
+-- hard-delete feature shipped broken there (SqlException: Invalid object name
+-- 'DeletedTickets'). Kept here only for historical reference to the column
+-- layout this repo's DELETE /api/Tickets/{id} logic expects; the bot-side
+-- migration is the actual source of truth for this table's schema going
+-- forward.
