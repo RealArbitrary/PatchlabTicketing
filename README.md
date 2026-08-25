@@ -12,7 +12,7 @@ Support ticket dashboard for Patchlab. Reads and displays tickets from the share
 
 No HTTP contract between this app and `PatchlabWhatsAppBot`. Both read/write the same SQL table directly, the database is the interface.
 
-This repo is Dapper-only — no EF Core, no migrations. It does not own schema for any table in the shared `Patchlab` database, including tables its own features depend on (e.g. `DeletedTickets`, the hard-delete archive table). Schema for the whole shared database is owned by `PatchlabWhatsAppBot` via EF Core migrations. Operational tooling that isn't application schema — e.g. the `dbo.PurgeDeletedTickets` stored proc and its SQL Agent job — legitimately stays as raw `.sql` in this repo (`PatchlabTicketing.Api/Sql/`), since it operates on a table this repo merely reads/writes, not one it creates.
+This repo is Dapper-only — no EF Core, no migrations. It does not own schema for any table in the shared `Patchlab` database, including tables its own features depend on (e.g. `DeletedTickets`, the hard-delete archive table). Schema for the whole shared database — plus any operational tooling on it, such as the `dbo.PurgeDeletedTickets` stored proc and its SQL Agent job — is owned by `PatchlabWhatsAppBot`, not this repo.
 
 ## Project structure
 
