@@ -1,3 +1,4 @@
+using Microsoft.Extensions.FileProviders;
 using PatchlabTicketing.Api.Data;
 using PatchlabTicketing.Api.Json;
 
@@ -17,6 +18,7 @@ builder.Services.AddScoped<TicketRepository>();
 builder.Services.AddScoped<ErrorLogRepository>();
 builder.Services.AddScoped<TicketFeedbackRepository>();
 builder.Services.AddScoped<TicketCommentRepository>();
+builder.Services.AddScoped<TicketPhotoRepository>();
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowReactDev", policy =>
@@ -32,6 +34,20 @@ var app = builder.Build();
 
 app.UseDefaultFiles();
 app.UseStaticFiles();
+
+// Serves ticket photo files saved by PatchlabWhatsAppBot. Scoped narrowly to
+// just this folder (not the bot's whole working directory, which also holds
+// config.json/secrets) via a dedicated PhysicalFileProvider, so nothing
+// outside TicketPhotos is reachable through this route.
+var ticketPhotosRoot = Path.GetFullPath(Path.Combine(
+    app.Environment.ContentRootPath,
+    app.Configuration["TicketPhotosRootPath"] ?? "TicketPhotos"));
+Directory.CreateDirectory(ticketPhotosRoot);
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(ticketPhotosRoot),
+    RequestPath = "/photos",
+});
 
 app.UseCors("AllowReactDev");
 

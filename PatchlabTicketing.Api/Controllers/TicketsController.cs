@@ -136,6 +136,13 @@ public class TicketsController : ControllerBase
         return Ok(feedback);
     }
 
+    [HttpGet("{ticketNumber}/photos")]
+    public async Task<IActionResult> GetPhotos(string ticketNumber, [FromServices] TicketPhotoRepository repo)
+    {
+        var photos = await repo.GetByTicketNumberAsync(ticketNumber);
+        return Ok(photos);
+    }
+
     [HttpGet("{ticketNumber}/comments")]
     public async Task<IActionResult> GetComments(string ticketNumber, [FromServices] TicketCommentRepository repo)
     {

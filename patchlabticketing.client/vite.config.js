@@ -9,6 +9,10 @@ export default defineConfig({
         target: "https://localhost:7168",
         secure: false,
       },
+      "/photos": {
+        target: "https://localhost:7168",
+        secure: false,
+      },
     },
   },
 });

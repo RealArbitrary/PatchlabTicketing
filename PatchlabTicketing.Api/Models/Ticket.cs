@@ -11,6 +11,7 @@ public class Ticket
     public DateTime? ResolvedAt { get; set; }
     public string Status { get; set; } = string.Empty;
     public string? TicketType { get; set; }
+    public int PhotoCount { get; set; }
     public string? FirstName { get; set; }
     public string? LastName { get; set; }
 }

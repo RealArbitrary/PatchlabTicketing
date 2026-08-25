@@ -21,6 +21,7 @@ public class TicketRepository
         const string sql = @"
         SELECT t.Id, t.TicketNumber, t.CellphoneNumber, t.Issue, t.Area, t.CreatedAt, t.ResolvedAt, t.Status,
                CASE t.TicketType WHEN 0 THEN 'IT' WHEN 1 THEN 'Herstelwerk' ELSE NULL END AS TicketType,
+               (SELECT COUNT(*) FROM TicketPhotos p WHERE p.TicketId = t.Id) AS PhotoCount,
                c.FirstName, c.LastName
         FROM Tickets t
         LEFT JOIN Customers c ON c.CellphoneNumber = t.CellphoneNumber
