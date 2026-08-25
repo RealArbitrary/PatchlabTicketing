@@ -150,7 +150,9 @@
 
 .ticket-list-toolbar {
   display: flex;
+  align-items: center;
   justify-content: flex-end;
+  gap: 0.5rem;
   padding: 0 1.5rem;
   margin-top: 1rem;
 }
@@ -168,6 +170,20 @@
 
 .toolbar-btn:hover {
   box-shadow: var(--glow-cyan);
+}
+
+.export-range-label {
+  color: var(--color-text-secondary);
+  font-size: 0.85rem;
+}
+
+.export-range-select {
+  background: transparent;
+  border: 1px solid var(--color-border);
+  color: var(--color-neon-cyan);
+  padding: 0.4rem 0.6rem;
+  border-radius: 6px;
+  font-size: 0.85rem;
 }
 
 .comments-section {
