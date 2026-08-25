@@ -1,6 +1,6 @@
 function StatusBadge({ status }) {
   const normalized = (status || "").toLowerCase();
-  const className = `status-badge status-badge-${normalized}`;
+  const className = `status-text status-text-${normalized}`;
 
   return <span className={className}>{status}</span>;
 }

@@ -35,6 +35,8 @@ function TicketList() {
   const [exportError, setExportError] = useState(null);
   const [exportRange, setExportRange] = useState("all");
   const [ticketTypeFilter, setTicketTypeFilter] = useState("all");
+  const [statusTab, setStatusTab] = useState("Open");
+  const [searchText, setSearchText] = useState("");
 
   useEffect(() => {
     let isMounted = true;
@@ -273,17 +275,70 @@ function TicketList() {
     return <p className="ticket-status-message">No tickets yet.</p>;
   }
 
-  const filteredTickets =
-    ticketTypeFilter === "all"
-      ? tickets
-      : tickets.filter((t) => t.ticketType === ticketTypeFilter);
+  const searchLower = searchText.trim().toLowerCase();
+
+  function matchesStatusTab(ticket) {
+    if (statusTab === "All") return true;
+    return ticket.status === statusTab;
+  }
+
+  function matchesTypeFilter(ticket) {
+    if (ticketTypeFilter === "all") return true;
+    return ticket.ticketType === ticketTypeFilter;
+  }
+
+  function matchesSearch(ticket) {
+    if (!searchLower) return true;
+    const name = `${ticket.firstName ?? ""} ${ticket.lastName ?? ""}`.trim();
+    return (
+      name.toLowerCase().includes(searchLower) ||
+      (ticket.area ?? "").toLowerCase().includes(searchLower) ||
+      (ticket.issue ?? "").toLowerCase().includes(searchLower) ||
+      (ticket.ticketNumber ?? "").toLowerCase().includes(searchLower)
+    );
+  }
+
+  const filteredTickets = tickets
+    .filter(matchesStatusTab)
+    .filter(matchesTypeFilter)
+    .filter(matchesSearch);
 
   const allExpanded =
     filteredTickets.length > 0 &&
     filteredTickets.every((t) => expandedIds.has(t.id));
 
   return (
-    <div>
+    <div className="ticket-list-page">
+      <div className="ticket-list-filters-row">
+        <div className="status-tabs">
+          <button
+            className={`status-tab ${statusTab === "Open" ? "status-tab-active" : ""}`}
+            onClick={() => setStatusTab("Open")}
+          >
+            Open
+          </button>
+          <button
+            className={`status-tab ${statusTab === "Closed" ? "status-tab-active" : ""}`}
+            onClick={() => setStatusTab("Closed")}
+          >
+            Closed
+          </button>
+          <button
+            className={`status-tab ${statusTab === "All" ? "status-tab-active" : ""}`}
+            onClick={() => setStatusTab("All")}
+          >
+            All
+          </button>
+        </div>
+        <input
+          type="text"
+          className="ticket-search-input"
+          placeholder="Search name, area, issue, or ticket number..."
+          value={searchText}
+          onChange={(e) => setSearchText(e.target.value)}
+        />
+      </div>
+
       <div className="ticket-list-toolbar">
         <button
           className="toolbar-btn"
@@ -291,18 +346,32 @@ function TicketList() {
         >
           {allExpanded ? "Collapse all" : "Expand all"}
         </button>
-        <button
-          className={`toolbar-btn toolbar-btn-filter-it ${ticketTypeFilter === "IT" ? "filter-active" : ""}`}
-          onClick={handleFilterIt}
-        >
-          IT Tickets
-        </button>
-        <button
-          className={`toolbar-btn toolbar-btn-filter-herstelwerk ${ticketTypeFilter === "Herstelwerk" ? "filter-active" : ""}`}
-          onClick={handleFilterHerstelwerk}
-        >
-          Herstelwerk Tickets
-        </button>
+        <span className="type-filter-group">
+          <span className="type-filter-label">
+            <svg
+              className="filter-icon"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              <polygon points="3 4 21 4 14 13 14 20 10 20 10 13 3 4" />
+            </svg>
+            Filter by type:
+          </span>
+          <button
+            className={`toolbar-btn toolbar-btn-filter-it ${ticketTypeFilter === "IT" ? "filter-active" : ""}`}
+            onClick={handleFilterIt}
+          >
+            IT Tickets
+          </button>
+          <button
+            className={`toolbar-btn toolbar-btn-filter-herstelwerk ${ticketTypeFilter === "Herstelwerk" ? "filter-active" : ""}`}
+            onClick={handleFilterHerstelwerk}
+          >
+            Herstelwerk Tickets
+          </button>
+        </span>
         <label className="export-range-label" htmlFor="export-range-select">
           Export range:
         </label>
