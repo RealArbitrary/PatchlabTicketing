@@ -8,6 +8,7 @@ public class Ticket
     public string Issue { get; set; } = string.Empty;
     public string? Area { get; set; }
     public DateTime CreatedAt { get; set; }
+    public DateTime? ResolvedAt { get; set; }
     public string Status { get; set; } = string.Empty;
     public string? FirstName { get; set; }
     public string? LastName { get; set; }
