@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System.Text;
+using Microsoft.AspNetCore.Mvc;
 using PatchlabTicketing.Api.Data;
 
 namespace PatchlabTicketing.Api.Controllers;
@@ -19,6 +20,44 @@ public class TicketsController : ControllerBase
     {
         var tickets = await _repo.GetAllAsync();
         return Ok(tickets);
+    }
+
+    [HttpGet("export")]
+    public async Task<IActionResult> Export()
+    {
+        var tickets = await _repo.GetAllAsync();
+
+        var sb = new StringBuilder();
+        sb.AppendLine("Ticket No,Cell No,Name & Surname,Location of issue,Issue description,Date ticket logged,Date ticket resolved");
+
+        foreach (var t in tickets)
+        {
+            var nameAndSurname = $"{t.FirstName} {t.LastName}".Trim();
+            var row = new[]
+            {
+                t.TicketNumber,
+                t.CellphoneNumber,
+                nameAndSurname,
+                t.Area ?? string.Empty,
+                t.Issue,
+                t.CreatedAt.ToString("yyyy-MM-dd HH:mm:ss"),
+                t.ResolvedAt?.ToString("yyyy-MM-dd HH:mm:ss") ?? string.Empty,
+            };
+            sb.AppendLine(string.Join(",", row.Select(CsvEscape)));
+        }
+
+        var bytes = Encoding.UTF8.GetBytes(sb.ToString());
+        return File(bytes, "text/csv", "tickets-export.csv");
+    }
+
+    private static string CsvEscape(string value)
+    {
+        if (value.Contains(',') || value.Contains('"') || value.Contains('\n') || value.Contains('\r'))
+        {
+            return $"\"{value.Replace("\"", "\"\"")}\"";
+        }
+
+        return value;
     }
 
     [HttpPut("{ticketNumber}/close")]

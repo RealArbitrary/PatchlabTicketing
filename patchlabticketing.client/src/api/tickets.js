@@ -36,3 +36,10 @@ export async function deleteTicketComment(ticketNumber, commentId) {
     `${API_BASE_URL}/Tickets/${ticketNumber}/comments/${commentId}`,
   );
 }
+
+export async function exportTicketsCsv() {
+  const response = await axios.get(`${API_BASE_URL}/Tickets/export`, {
+    responseType: "blob",
+  });
+  return response.data;
+}

@@ -18,7 +18,7 @@ public class TicketRepository
     {
         using var conn = new SqlConnection(_connectionString);
         const string sql = @"
-        SELECT t.Id, t.TicketNumber, t.CellphoneNumber, t.Issue, t.Area, t.CreatedAt, t.Status,
+        SELECT t.Id, t.TicketNumber, t.CellphoneNumber, t.Issue, t.Area, t.CreatedAt, t.ResolvedAt, t.Status,
                c.FirstName, c.LastName
         FROM Tickets t
         LEFT JOIN Customers c ON c.CellphoneNumber = t.CellphoneNumber
@@ -29,7 +29,11 @@ public class TicketRepository
     public async Task<bool> CloseTicketAsync(string ticketNumber)
     {
         using var conn = new SqlConnection(_connectionString);
-        const string sql = "UPDATE Tickets SET Status = 'Closed' WHERE TicketNumber = @TicketNumber";
+        const string sql = @"
+            UPDATE Tickets
+            SET Status = 'Closed',
+                ResolvedAt = CASE WHEN Status <> 'Closed' THEN GETUTCDATE() ELSE ResolvedAt END
+            WHERE TicketNumber = @TicketNumber";
         var rowsAffected = await conn.ExecuteAsync(sql, new { TicketNumber = ticketNumber });
         return rowsAffected > 0;
     }

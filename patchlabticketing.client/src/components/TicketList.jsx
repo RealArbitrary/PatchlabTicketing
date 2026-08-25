@@ -6,6 +6,7 @@ import {
   getTicketComments,
   addTicketComment,
   deleteTicketComment,
+  exportTicketsCsv,
 } from "../api/tickets";
 import StatusBadge from "./StatusBadge";
 
@@ -27,6 +28,8 @@ function TicketList() {
   const [newCommentText, setNewCommentText] = useState({});
   const [savingCommentId, setSavingCommentId] = useState(null);
   const [deletingCommentId, setDeletingCommentId] = useState(null);
+  const [exporting, setExporting] = useState(false);
+  const [exportError, setExportError] = useState(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -159,6 +162,27 @@ function TicketList() {
     }
   }
 
+  async function handleExportCsv() {
+    setExporting(true);
+    setExportError(null);
+
+    try {
+      const blob = await exportTicketsCsv();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "tickets-export.csv";
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch {
+      setExportError("Failed to export tickets.");
+    } finally {
+      setExporting(false);
+    }
+  }
+
   function handleRowClick(ticket) {
     setExpandedIds((prev) => {
       const next = new Set(prev);
@@ -212,6 +236,18 @@ function TicketList() {
         >
           {allExpanded ? "Collapse all" : "Expand all"}
         </button>
+        <button
+          className="toolbar-btn"
+          onClick={handleExportCsv}
+          disabled={exporting}
+        >
+          {exporting ? "Exporting..." : "Export to CSV"}
+        </button>
+        {exportError && (
+          <span className="ticket-status-message ticket-status-error">
+            {exportError}
+          </span>
+        )}
       </div>
 
       <table className="ticket-table">
