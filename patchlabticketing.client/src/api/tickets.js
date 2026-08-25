@@ -36,3 +36,7 @@ export async function deleteTicketComment(ticketNumber, commentId) {
     `${API_BASE_URL}/Tickets/${ticketNumber}/comments/${commentId}`,
   );
 }
+
+export async function deleteTicket(id) {
+  await axios.delete(`${API_BASE_URL}/Tickets/${id}`);
+}

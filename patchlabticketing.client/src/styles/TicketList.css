@@ -99,6 +99,24 @@
   border-color: var(--color-border);
 }
 
+.action-btn-danger {
+  cursor: pointer;
+  opacity: 1;
+  color: #f87171;
+  border-color: #f87171;
+}
+
+.action-btn-danger:hover:not(:disabled) {
+  background-color: rgba(248, 113, 113, 0.1);
+}
+
+.action-btn-danger:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+  color: var(--color-text-secondary);
+  border-color: var(--color-border);
+}
+
 .action-error {
   color: #f87171;
   font-size: 0.75rem;
