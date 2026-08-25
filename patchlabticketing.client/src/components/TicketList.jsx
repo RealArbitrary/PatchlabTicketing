@@ -3,6 +3,7 @@ import {
   getTickets,
   closeTicket,
   getTicketFeedback,
+  getTicketPhotos,
   getTicketComments,
   addTicketComment,
   deleteTicketComment,
@@ -24,6 +25,9 @@ function TicketList() {
   const [feedbackCache, setFeedbackCache] = useState({});
   const [feedbackLoading, setFeedbackLoading] = useState({});
   const [feedbackError, setFeedbackError] = useState({});
+  const [photoCache, setPhotoCache] = useState({});
+  const [photoLoading, setPhotoLoading] = useState({});
+  const [photoError, setPhotoError] = useState({});
   const [commentCache, setCommentCache] = useState({});
   const [commentLoading, setCommentLoading] = useState({});
   const [commentError, setCommentError] = useState({});
@@ -108,6 +112,25 @@ function TicketList() {
       }));
     } finally {
       setFeedbackLoading((prev) => ({ ...prev, [ticket.id]: false }));
+    }
+  }
+
+  async function fetchPhotosIfNeeded(ticket) {
+    if (photoCache[ticket.id]) return;
+
+    setPhotoLoading((prev) => ({ ...prev, [ticket.id]: true }));
+    setPhotoError((prev) => ({ ...prev, [ticket.id]: null }));
+
+    try {
+      const data = await getTicketPhotos(ticket.ticketNumber);
+      setPhotoCache((prev) => ({ ...prev, [ticket.id]: data }));
+    } catch {
+      setPhotoError((prev) => ({
+        ...prev,
+        [ticket.id]: "Could not load photos.",
+      }));
+    } finally {
+      setPhotoLoading((prev) => ({ ...prev, [ticket.id]: false }));
     }
   }
 
@@ -289,6 +312,7 @@ function TicketList() {
 
     if (!expandedIds.has(ticket.id)) {
       fetchFeedbackIfNeeded(ticket);
+      fetchPhotosIfNeeded(ticket);
       fetchCommentsIfNeeded(ticket);
     }
   }
@@ -297,6 +321,7 @@ function TicketList() {
     setExpandedIds(new Set(filteredTickets.map((t) => t.id)));
     filteredTickets.forEach((ticket) => {
       fetchFeedbackIfNeeded(ticket);
+      fetchPhotosIfNeeded(ticket);
       fetchCommentsIfNeeded(ticket);
     });
   }
@@ -469,7 +494,26 @@ function TicketList() {
                 className={`ticket-row-clickable ${getTicketTypeRowClass(ticket.ticketType)}`}
                 onClick={() => handleRowClick(ticket)}
               >
-                <td>{ticket.ticketNumber}</td>
+                <td>
+                  {ticket.ticketNumber}
+                  {ticket.photoCount > 0 && (
+                    <span
+                      className="photo-indicator"
+                      title={`${ticket.photoCount} photo${ticket.photoCount === 1 ? "" : "s"}`}
+                    >
+                      <svg
+                        className="photo-indicator-icon"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                      >
+                        <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" />
+                      </svg>
+                      {ticket.photoCount}
+                    </span>
+                  )}
+                </td>
                 <td>
                   {`${ticket.firstName ?? ""} ${ticket.lastName ?? ""}`.trim() ||
                     "—"}
@@ -481,7 +525,10 @@ function TicketList() {
                 <td>
                   <StatusBadge status={ticket.status} />
                 </td>
-                <td onClick={(e) => e.stopPropagation()}>
+                <td
+                  className="ticket-actions-cell"
+                  onClick={(e) => e.stopPropagation()}
+                >
                   {editingTypeTicketId === ticket.id ? (
                     <>
                       <select
@@ -599,6 +646,46 @@ function TicketList() {
                           ))}
                         </ul>
                       ))}
+
+                    <div className="photos-section">
+                      <h4 className="photos-heading">Photos</h4>
+
+                      {photoLoading[ticket.id] && (
+                        <p className="ticket-status-message">
+                          Loading photos...
+                        </p>
+                      )}
+                      {photoError[ticket.id] && (
+                        <p className="ticket-status-message ticket-status-error">
+                          {photoError[ticket.id]}
+                        </p>
+                      )}
+                      {photoCache[ticket.id] &&
+                        (photoCache[ticket.id].length === 0 ? (
+                          <p className="ticket-status-message">
+                            No photos yet.
+                          </p>
+                        ) : (
+                          <div className="photo-thumb-strip">
+                            {photoCache[ticket.id].map((p) => (
+                              <a
+                                key={p.id}
+                                className="photo-thumb-link"
+                                href={`/photos/${p.filePath}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                <img
+                                  className="photo-thumb-img"
+                                  src={`/photos/${p.filePath}`}
+                                  alt="Ticket attachment"
+                                />
+                              </a>
+                            ))}
+                          </div>
+                        ))}
+                    </div>
 
                     <div className="comments-section">
                       <h4 className="comments-heading">Comments</h4>
