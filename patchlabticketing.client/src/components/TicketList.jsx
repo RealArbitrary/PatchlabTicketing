@@ -216,7 +216,9 @@ function TicketList() {
   }
 
   function handleFilterHerstelwerk() {
-    setTicketTypeFilter((prev) => (prev === "Herstelwerk" ? "all" : "Herstelwerk"));
+    setTicketTypeFilter((prev) =>
+      prev === "Herstelwerk" ? "all" : "Herstelwerk",
+    );
   }
 
   function getTicketTypeRowClass(ticketType) {
@@ -369,9 +371,9 @@ function TicketList() {
                   <StatusBadge status={ticket.status} />
                 </td>
                 <td onClick={(e) => e.stopPropagation()}>
-                  <button className="action-btn" disabled title="Coming soon">
+                  {/* <button className="action-btn" disabled title="Coming soon">
                     Open Chat
-                  </button>
+                  </button> */}
                   <button
                     className="action-btn action-btn-active"
                     onClick={() => handleClose(ticket)}
