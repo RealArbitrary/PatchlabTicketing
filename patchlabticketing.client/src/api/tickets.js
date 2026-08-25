@@ -41,6 +41,10 @@ export async function deleteTicket(id) {
   await axios.delete(`${API_BASE_URL}/Tickets/${id}`);
 }
 
+export async function updateTicketType(id, ticketType) {
+  await axios.patch(`${API_BASE_URL}/Tickets/${id}/type`, { ticketType });
+}
+
 export async function exportTicketsCsv(range = "all") {
   const response = await axios.get(`${API_BASE_URL}/Tickets/export`, {
     params: { range },
