@@ -28,6 +28,14 @@ public class TicketRepository
         return await conn.QueryAsync<Ticket>(sql);
     }
 
+    public async Task<bool> UpdateTicketTypeAsync(int id, int ticketTypeValue)
+    {
+        using var conn = new SqlConnection(_connectionString);
+        const string sql = "UPDATE Tickets SET TicketType = @TicketType WHERE Id = @Id";
+        var rowsAffected = await conn.ExecuteAsync(sql, new { Id = id, TicketType = ticketTypeValue });
+        return rowsAffected > 0;
+    }
+
     public async Task<bool> CloseTicketAsync(string ticketNumber)
     {
         using var conn = new SqlConnection(_connectionString);

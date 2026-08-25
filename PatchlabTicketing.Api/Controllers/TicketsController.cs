@@ -103,6 +103,32 @@ public class TicketsController : ControllerBase
         return NoContent();
     }
 
+    [HttpPatch("{id}/type")]
+    public async Task<IActionResult> UpdateTicketType(int id, [FromBody] UpdateTicketTypeRequest request)
+    {
+        int ticketTypeValue;
+        if (request.TicketType == "IT")
+        {
+            ticketTypeValue = 0;
+        }
+        else if (request.TicketType == "Herstelwerk")
+        {
+            ticketTypeValue = 1;
+        }
+        else
+        {
+            return BadRequest("TicketType must be one of: IT, Herstelwerk");
+        }
+
+        var success = await _repo.UpdateTicketTypeAsync(id, ticketTypeValue);
+        if (!success)
+        {
+            return NotFound();
+        }
+
+        return NoContent();
+    }
+
     [HttpGet("{ticketNumber}/feedback")]
     public async Task<IActionResult> GetFeedback(string ticketNumber, [FromServices] TicketFeedbackRepository feedbackRepo)
     {
@@ -138,3 +164,5 @@ public class TicketsController : ControllerBase
     }
 
 }
+
+public record UpdateTicketTypeRequest(string TicketType);

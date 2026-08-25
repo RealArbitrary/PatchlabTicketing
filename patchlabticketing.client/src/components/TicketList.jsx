@@ -7,6 +7,7 @@ import {
   addTicketComment,
   deleteTicketComment,
   deleteTicket,
+  updateTicketType,
   exportTicketsCsv,
 } from "../api/tickets";
 import StatusBadge from "./StatusBadge";
@@ -31,6 +32,10 @@ function TicketList() {
   const [deletingCommentId, setDeletingCommentId] = useState(null);
   const [deletingTicketId, setDeletingTicketId] = useState(null);
   const [deleteTicketErrors, setDeleteTicketErrors] = useState({});
+  const [editingTypeTicketId, setEditingTypeTicketId] = useState(null);
+  const [editingTypeValue, setEditingTypeValue] = useState("IT");
+  const [savingTypeTicketId, setSavingTypeTicketId] = useState(null);
+  const [typeEditErrors, setTypeEditErrors] = useState({});
   const [exporting, setExporting] = useState(false);
   const [exportError, setExportError] = useState(null);
   const [exportRange, setExportRange] = useState("all");
@@ -188,6 +193,43 @@ function TicketList() {
       }));
     } finally {
       setDeletingTicketId(null);
+    }
+  }
+
+  function handleStartEditType(ticket) {
+    setEditingTypeTicketId(ticket.id);
+    setEditingTypeValue(
+      ticket.ticketType === "IT" || ticket.ticketType === "Herstelwerk"
+        ? ticket.ticketType
+        : "IT",
+    );
+    setTypeEditErrors((prev) => ({ ...prev, [ticket.id]: null }));
+  }
+
+  function handleCancelEditType(ticket) {
+    setEditingTypeTicketId(null);
+    setTypeEditErrors((prev) => ({ ...prev, [ticket.id]: null }));
+  }
+
+  async function handleSaveEditType(ticket) {
+    setSavingTypeTicketId(ticket.id);
+    setTypeEditErrors((prev) => ({ ...prev, [ticket.id]: null }));
+
+    try {
+      await updateTicketType(ticket.id, editingTypeValue);
+      setTickets((prev) =>
+        prev.map((t) =>
+          t.id === ticket.id ? { ...t, ticketType: editingTypeValue } : t,
+        ),
+      );
+      setEditingTypeTicketId(null);
+    } catch {
+      setTypeEditErrors((prev) => ({
+        ...prev,
+        [ticket.id]: "Failed to update ticket type.",
+      }));
+    } finally {
+      setSavingTypeTicketId(null);
     }
   }
 
@@ -440,27 +482,71 @@ function TicketList() {
                   <StatusBadge status={ticket.status} />
                 </td>
                 <td onClick={(e) => e.stopPropagation()}>
-                  {/* <button className="action-btn" disabled title="Coming soon">
-                    Open Chat
-                  </button> */}
-                  <button
-                    className="action-btn action-btn-active"
-                    onClick={() => handleClose(ticket)}
-                    disabled={
-                      ticket.status === "Closed" || closingId === ticket.id
-                    }
-                  >
-                    {closingId === ticket.id ? "Closing..." : "Close"}
-                  </button>
-                  <button
-                    className="action-btn action-btn-danger"
-                    onClick={() => handleDeleteTicket(ticket)}
-                    disabled={deletingTicketId === ticket.id}
-                  >
-                    {deletingTicketId === ticket.id ? "Deleting..." : "Delete"}
-                  </button>
+                  {editingTypeTicketId === ticket.id ? (
+                    <>
+                      <select
+                        className="ticket-type-select"
+                        value={editingTypeValue}
+                        onChange={(e) => setEditingTypeValue(e.target.value)}
+                      >
+                        <option value="IT">IT</option>
+                        <option value="Herstelwerk">Herstelwerk</option>
+                      </select>
+                      <button
+                        className="action-btn action-btn-active"
+                        onClick={() => handleSaveEditType(ticket)}
+                        disabled={savingTypeTicketId === ticket.id}
+                      >
+                        {savingTypeTicketId === ticket.id
+                          ? "Saving..."
+                          : "Save"}
+                      </button>
+                      <button
+                        className="action-btn action-btn-cancel"
+                        onClick={() => handleCancelEditType(ticket)}
+                        disabled={savingTypeTicketId === ticket.id}
+                      >
+                        Cancel
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      {/* <button className="action-btn" disabled title="Coming soon">
+                        Open Chat
+                      </button> */}
+                      <button
+                        className="action-btn action-btn-active"
+                        onClick={() => handleClose(ticket)}
+                        disabled={
+                          ticket.status === "Closed" || closingId === ticket.id
+                        }
+                      >
+                        {closingId === ticket.id ? "Closing..." : "Close"}
+                      </button>
+                      <button
+                        className="action-btn action-btn-active"
+                        onClick={() => handleStartEditType(ticket)}
+                      >
+                        Edit
+                      </button>
+                      <button
+                        className="action-btn action-btn-danger"
+                        onClick={() => handleDeleteTicket(ticket)}
+                        disabled={deletingTicketId === ticket.id}
+                      >
+                        {deletingTicketId === ticket.id
+                          ? "Deleting..."
+                          : "Delete"}
+                      </button>
+                    </>
+                  )}
                   {closeErrors[ticket.id] && (
                     <div className="action-error">{closeErrors[ticket.id]}</div>
+                  )}
+                  {typeEditErrors[ticket.id] && (
+                    <div className="action-error">
+                      {typeEditErrors[ticket.id]}
+                    </div>
                   )}
                   {deleteTicketErrors[ticket.id] && (
                     <div className="action-error">
