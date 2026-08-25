@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System.Text;
+using Microsoft.AspNetCore.Mvc;
 using PatchlabTicketing.Api.Data;
 
 namespace PatchlabTicketing.Api.Controllers;
@@ -19,6 +20,63 @@ public class TicketsController : ControllerBase
     {
         var tickets = await _repo.GetAllAsync();
         return Ok(tickets);
+    }
+
+    private static readonly int[] ValidRangeDays = { 30, 60, 90 };
+
+    [HttpGet("export")]
+    public async Task<IActionResult> Export([FromQuery] string range = "all")
+    {
+        int? rangeDays = null;
+        if (!string.IsNullOrWhiteSpace(range) && !range.Equals("all", StringComparison.OrdinalIgnoreCase))
+        {
+            if (!int.TryParse(range, out var days) || !ValidRangeDays.Contains(days))
+            {
+                return BadRequest("range must be one of: 30, 60, 90, all");
+            }
+            rangeDays = days;
+        }
+
+        var tickets = await _repo.GetAllAsync();
+
+        if (rangeDays.HasValue)
+        {
+            var cutoff = DateTime.UtcNow.AddDays(-rangeDays.Value);
+            tickets = tickets.Where(t => t.CreatedAt >= cutoff);
+        }
+
+        var sb = new StringBuilder();
+        sb.AppendLine("Ticket No,Cell No,Name & Surname,Location of issue,Issue description,Date ticket logged,Date ticket resolved");
+
+        foreach (var t in tickets)
+        {
+            var nameAndSurname = $"{t.FirstName} {t.LastName}".Trim();
+            var row = new[]
+            {
+                t.TicketNumber,
+                t.CellphoneNumber,
+                nameAndSurname,
+                t.Area ?? string.Empty,
+                t.Issue,
+                t.CreatedAt.ToString("yyyy-MM-dd HH:mm:ss"),
+                t.ResolvedAt?.ToString("yyyy-MM-dd HH:mm:ss") ?? string.Empty,
+            };
+            sb.AppendLine(string.Join(",", row.Select(CsvEscape)));
+        }
+
+        var bytes = Encoding.UTF8.GetBytes(sb.ToString());
+        var fileName = $"tickets-export-{DateTime.UtcNow:yyyy-MM-dd}.csv";
+        return File(bytes, "text/csv", fileName);
+    }
+
+    private static string CsvEscape(string value)
+    {
+        if (value.Contains(',') || value.Contains('"') || value.Contains('\n') || value.Contains('\r'))
+        {
+            return $"\"{value.Replace("\"", "\"\"")}\"";
+        }
+
+        return value;
     }
 
     [HttpPut("{ticketNumber}/close")]

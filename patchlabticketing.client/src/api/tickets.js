@@ -40,3 +40,11 @@ export async function deleteTicketComment(ticketNumber, commentId) {
 export async function deleteTicket(id) {
   await axios.delete(`${API_BASE_URL}/Tickets/${id}`);
 }
+
+export async function exportTicketsCsv(range = "all") {
+  const response = await axios.get(`${API_BASE_URL}/Tickets/export`, {
+    params: { range },
+    responseType: "blob",
+  });
+  return response.data;
+}

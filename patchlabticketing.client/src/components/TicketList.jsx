@@ -7,6 +7,7 @@ import {
   addTicketComment,
   deleteTicketComment,
   deleteTicket,
+  exportTicketsCsv,
 } from "../api/tickets";
 import StatusBadge from "./StatusBadge";
 
@@ -30,6 +31,9 @@ function TicketList() {
   const [deletingCommentId, setDeletingCommentId] = useState(null);
   const [deletingTicketId, setDeletingTicketId] = useState(null);
   const [deleteTicketErrors, setDeleteTicketErrors] = useState({});
+  const [exporting, setExporting] = useState(false);
+  const [exportError, setExportError] = useState(null);
+  const [exportRange, setExportRange] = useState("all");
 
   useEffect(() => {
     let isMounted = true;
@@ -184,6 +188,28 @@ function TicketList() {
     }
   }
 
+  async function handleExportCsv() {
+    setExporting(true);
+    setExportError(null);
+
+    try {
+      const blob = await exportTicketsCsv(exportRange);
+      const url = window.URL.createObjectURL(blob);
+      const today = new Date().toISOString().slice(0, 10);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `tickets-export-${today}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch {
+      setExportError("Failed to export tickets.");
+    } finally {
+      setExporting(false);
+    }
+  }
+
   function handleRowClick(ticket) {
     setExpandedIds((prev) => {
       const next = new Set(prev);
@@ -237,6 +263,32 @@ function TicketList() {
         >
           {allExpanded ? "Collapse all" : "Expand all"}
         </button>
+        <label className="export-range-label" htmlFor="export-range-select">
+          Export range:
+        </label>
+        <select
+          id="export-range-select"
+          className="export-range-select"
+          value={exportRange}
+          onChange={(e) => setExportRange(e.target.value)}
+        >
+          <option value="30">Last 30 days (by date created)</option>
+          <option value="60">Last 60 days (by date created)</option>
+          <option value="90">Last 90 days (by date created)</option>
+          <option value="all">All tickets</option>
+        </select>
+        <button
+          className="toolbar-btn"
+          onClick={handleExportCsv}
+          disabled={exporting}
+        >
+          {exporting ? "Exporting..." : "Export to CSV"}
+        </button>
+        {exportError && (
+          <span className="ticket-status-message ticket-status-error">
+            {exportError}
+          </span>
+        )}
       </div>
 
       <table className="ticket-table">
