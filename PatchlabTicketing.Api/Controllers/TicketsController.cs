@@ -91,6 +91,18 @@ public class TicketsController : ControllerBase
         return NoContent();
     }
 
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> DeleteTicket(int id)
+    {
+        var success = await _repo.DeleteTicketAsync(id);
+        if (!success)
+        {
+            return NotFound();
+        }
+
+        return NoContent();
+    }
+
     [HttpGet("{ticketNumber}/feedback")]
     public async Task<IActionResult> GetFeedback(string ticketNumber, [FromServices] TicketFeedbackRepository feedbackRepo)
     {

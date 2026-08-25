@@ -6,6 +6,7 @@ import {
   getTicketComments,
   addTicketComment,
   deleteTicketComment,
+  deleteTicket,
   exportTicketsCsv,
 } from "../api/tickets";
 import StatusBadge from "./StatusBadge";
@@ -28,6 +29,8 @@ function TicketList() {
   const [newCommentText, setNewCommentText] = useState({});
   const [savingCommentId, setSavingCommentId] = useState(null);
   const [deletingCommentId, setDeletingCommentId] = useState(null);
+  const [deletingTicketId, setDeletingTicketId] = useState(null);
+  const [deleteTicketErrors, setDeleteTicketErrors] = useState({});
   const [exporting, setExporting] = useState(false);
   const [exportError, setExportError] = useState(null);
   const [exportRange, setExportRange] = useState("all");
@@ -160,6 +163,28 @@ function TicketList() {
       }));
     } finally {
       setDeletingCommentId(null);
+    }
+  }
+
+  async function handleDeleteTicket(ticket) {
+    const confirmed = window.confirm(
+      `Delete ticket ${ticket.ticketNumber}? This cannot be undone — there is no restore feature yet.`,
+    );
+    if (!confirmed) return;
+
+    setDeletingTicketId(ticket.id);
+    setDeleteTicketErrors((prev) => ({ ...prev, [ticket.id]: null }));
+
+    try {
+      await deleteTicket(ticket.id);
+      setTickets((prev) => prev.filter((t) => t.id !== ticket.id));
+    } catch {
+      setDeleteTicketErrors((prev) => ({
+        ...prev,
+        [ticket.id]: "Failed to delete ticket.",
+      }));
+    } finally {
+      setDeletingTicketId(null);
     }
   }
 
@@ -311,8 +336,20 @@ function TicketList() {
                   >
                     {closingId === ticket.id ? "Closing..." : "Close"}
                   </button>
+                  <button
+                    className="action-btn action-btn-danger"
+                    onClick={() => handleDeleteTicket(ticket)}
+                    disabled={deletingTicketId === ticket.id}
+                  >
+                    {deletingTicketId === ticket.id ? "Deleting..." : "Delete"}
+                  </button>
                   {closeErrors[ticket.id] && (
                     <div className="action-error">{closeErrors[ticket.id]}</div>
+                  )}
+                  {deleteTicketErrors[ticket.id] && (
+                    <div className="action-error">
+                      {deleteTicketErrors[ticket.id]}
+                    </div>
                   )}
                 </td>
               </tr>
