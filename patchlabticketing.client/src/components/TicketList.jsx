@@ -34,6 +34,7 @@ function TicketList() {
   const [exporting, setExporting] = useState(false);
   const [exportError, setExportError] = useState(null);
   const [exportRange, setExportRange] = useState("all");
+  const [ticketTypeFilter, setTicketTypeFilter] = useState("all");
 
   useEffect(() => {
     let isMounted = true;
@@ -210,6 +211,25 @@ function TicketList() {
     }
   }
 
+  function handleFilterIt() {
+    setTicketTypeFilter((prev) => (prev === "IT" ? "all" : "IT"));
+  }
+
+  function handleFilterHerstelwerk() {
+    setTicketTypeFilter((prev) => (prev === "Herstelwerk" ? "all" : "Herstelwerk"));
+  }
+
+  function getTicketTypeRowClass(ticketType) {
+    if (ticketType === "IT") {
+      return "ticket-row-type-it";
+    } else if (ticketType === "Herstelwerk") {
+      return "ticket-row-type-herstelwerk";
+    } else {
+      // Missing/null/unrecognized TicketType: render as-is, no highlight.
+      return "";
+    }
+  }
+
   function handleRowClick(ticket) {
     setExpandedIds((prev) => {
       const next = new Set(prev);
@@ -228,8 +248,8 @@ function TicketList() {
   }
 
   function handleExpandAll() {
-    setExpandedIds(new Set(tickets.map((t) => t.id)));
-    tickets.forEach((ticket) => {
+    setExpandedIds(new Set(filteredTickets.map((t) => t.id)));
+    filteredTickets.forEach((ticket) => {
       fetchFeedbackIfNeeded(ticket);
       fetchCommentsIfNeeded(ticket);
     });
@@ -251,8 +271,14 @@ function TicketList() {
     return <p className="ticket-status-message">No tickets yet.</p>;
   }
 
+  const filteredTickets =
+    ticketTypeFilter === "all"
+      ? tickets
+      : tickets.filter((t) => t.ticketType === ticketTypeFilter);
+
   const allExpanded =
-    tickets.length > 0 && tickets.every((t) => expandedIds.has(t.id));
+    filteredTickets.length > 0 &&
+    filteredTickets.every((t) => expandedIds.has(t.id));
 
   return (
     <div>
@@ -262,6 +288,18 @@ function TicketList() {
           onClick={allExpanded ? handleCollapseAll : handleExpandAll}
         >
           {allExpanded ? "Collapse all" : "Expand all"}
+        </button>
+        <button
+          className={`toolbar-btn toolbar-btn-filter-it ${ticketTypeFilter === "IT" ? "filter-active" : ""}`}
+          onClick={handleFilterIt}
+        >
+          IT Tickets
+        </button>
+        <button
+          className={`toolbar-btn toolbar-btn-filter-herstelwerk ${ticketTypeFilter === "Herstelwerk" ? "filter-active" : ""}`}
+          onClick={handleFilterHerstelwerk}
+        >
+          Herstelwerk Tickets
         </button>
         <label className="export-range-label" htmlFor="export-range-select">
           Export range:
@@ -305,10 +343,17 @@ function TicketList() {
           </tr>
         </thead>
         <tbody>
-          {tickets.map((ticket) => (
+          {filteredTickets.length === 0 && (
+            <tr>
+              <td colSpan={8} className="ticket-status-message">
+                No tickets match this filter.
+              </td>
+            </tr>
+          )}
+          {filteredTickets.map((ticket) => (
             <Fragment key={ticket.id}>
               <tr
-                className="ticket-row-clickable"
+                className={`ticket-row-clickable ${getTicketTypeRowClass(ticket.ticketType)}`}
                 onClick={() => handleRowClick(ticket)}
               >
                 <td>{ticket.ticketNumber}</td>

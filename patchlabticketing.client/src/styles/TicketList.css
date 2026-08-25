@@ -44,6 +44,24 @@
   background-color: rgba(192, 38, 211, 0.04);
 }
 
+.ticket-row-type-it {
+  border-left: 3px solid var(--color-neon-cyan);
+  background-color: rgba(34, 211, 238, 0.06);
+}
+
+.ticket-row-type-it:hover {
+  background-color: rgba(34, 211, 238, 0.1);
+}
+
+.ticket-row-type-herstelwerk {
+  border-left: 3px solid var(--color-neon-orange);
+  background-color: rgba(217, 119, 6, 0.06);
+}
+
+.ticket-row-type-herstelwerk:hover {
+  background-color: rgba(217, 119, 6, 0.1);
+}
+
 .status-badge {
   display: inline-block;
   padding: 0.25rem 0.75rem;
@@ -188,6 +206,20 @@
 
 .toolbar-btn:hover {
   box-shadow: var(--glow-cyan);
+}
+
+.toolbar-btn-filter-it.filter-active {
+  color: var(--color-bg);
+  background-color: var(--color-neon-cyan);
+  border-color: var(--color-neon-cyan);
+  box-shadow: var(--glow-cyan);
+}
+
+.toolbar-btn-filter-herstelwerk.filter-active {
+  color: var(--color-bg);
+  background-color: var(--color-neon-orange);
+  border-color: var(--color-neon-orange);
+  box-shadow: var(--glow-orange);
 }
 
 .export-range-label {

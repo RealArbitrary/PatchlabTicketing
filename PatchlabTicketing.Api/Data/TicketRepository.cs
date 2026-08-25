@@ -20,6 +20,7 @@ public class TicketRepository
         using var conn = new SqlConnection(_connectionString);
         const string sql = @"
         SELECT t.Id, t.TicketNumber, t.CellphoneNumber, t.Issue, t.Area, t.CreatedAt, t.ResolvedAt, t.Status,
+               CASE t.TicketType WHEN 0 THEN 'IT' WHEN 1 THEN 'Herstelwerk' ELSE NULL END AS TicketType,
                c.FirstName, c.LastName
         FROM Tickets t
         LEFT JOIN Customers c ON c.CellphoneNumber = t.CellphoneNumber
