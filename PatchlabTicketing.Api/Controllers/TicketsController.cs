@@ -55,4 +55,16 @@ public class TicketsController : ControllerBase
         return NoContent();
     }
 
+    [HttpDelete("{ticketNumber}/comments/{commentId}")]
+    public async Task<IActionResult> DeleteComment(string ticketNumber, int commentId, [FromServices] TicketCommentRepository repo)
+    {
+        var success = await repo.DeleteAsync(commentId);
+        if (!success)
+        {
+            return NotFound();
+        }
+
+        return NoContent();
+    }
+
 }

@@ -5,6 +5,7 @@ import {
   getTicketFeedback,
   getTicketComments,
   addTicketComment,
+  deleteTicketComment,
 } from "../api/tickets";
 import StatusBadge from "./StatusBadge";
 
@@ -25,6 +26,7 @@ function TicketList() {
   const [commentError, setCommentError] = useState({});
   const [newCommentText, setNewCommentText] = useState({});
   const [savingCommentId, setSavingCommentId] = useState(null);
+  const [deletingCommentId, setDeletingCommentId] = useState(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -132,6 +134,28 @@ function TicketList() {
       }));
     } finally {
       setSavingCommentId(null);
+    }
+  }
+
+  async function handleDeleteComment(ticket, comment) {
+    if (!window.confirm("Delete this comment?")) return;
+
+    setDeletingCommentId(comment.id);
+    setCommentError((prev) => ({ ...prev, [ticket.id]: null }));
+
+    try {
+      await deleteTicketComment(ticket.ticketNumber, comment.id);
+      setCommentCache((prev) => ({
+        ...prev,
+        [ticket.id]: prev[ticket.id].filter((c) => c.id !== comment.id),
+      }));
+    } catch {
+      setCommentError((prev) => ({
+        ...prev,
+        [ticket.id]: "Failed to delete comment.",
+      }));
+    } finally {
+      setDeletingCommentId(null);
     }
   }
 
@@ -310,8 +334,20 @@ function TicketList() {
                                 <span className="comment-text">
                                   {c.comment}
                                 </span>
-                                <span className="comment-date">
-                                  {new Date(c.createdAt).toLocaleString()}
+                                <span className="comment-meta">
+                                  <span className="comment-date">
+                                    {new Date(c.createdAt).toLocaleString()}
+                                  </span>
+                                  <button
+                                    className="comment-delete-btn"
+                                    onClick={() =>
+                                      handleDeleteComment(ticket, c)
+                                    }
+                                    disabled={deletingCommentId === c.id}
+                                    title="Delete comment"
+                                  >
+                                    {deletingCommentId === c.id ? "…" : "✕"}
+                                  </button>
                                 </span>
                               </li>
                             ))}

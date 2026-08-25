@@ -30,4 +30,12 @@ public class TicketCommentRepository
             SELECT Id, @Comment, GETUTCDATE() FROM Tickets WHERE TicketNumber = @TicketNumber";
         await conn.ExecuteAsync(sql, new { TicketNumber = ticketNumber, Comment = comment });
     }
+
+    public async Task<bool> DeleteAsync(int commentId)
+    {
+        using var conn = new SqlConnection(_connectionString);
+        const string sql = "DELETE FROM TicketComments WHERE Id = @Id";
+        var rowsAffected = await conn.ExecuteAsync(sql, new { Id = commentId });
+        return rowsAffected > 0;
+    }
 }
