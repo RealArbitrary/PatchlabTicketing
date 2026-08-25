@@ -1,0 +1,18 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "api",
+      "runtimeExecutable": "dotnet",
+      "runtimeArgs": ["run", "--project", "PatchlabTicketing.Api", "--launch-profile", "https"],
+      "port": 7168,
+      "url": "https://localhost:7168"
+    },
+    {
+      "name": "client",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "patchlabticketing.client", "run", "dev", "--", "--port", "5173"],
+      "port": 5173
+    }
+  ]
+}

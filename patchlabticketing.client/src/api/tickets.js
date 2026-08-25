@@ -30,3 +30,9 @@ export async function addTicketComment(ticketNumber, comment) {
     comment,
   });
 }
+
+export async function deleteTicketComment(ticketNumber, commentId) {
+  await axios.delete(
+    `${API_BASE_URL}/Tickets/${ticketNumber}/comments/${commentId}`,
+  );
+}
