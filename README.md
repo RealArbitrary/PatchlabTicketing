@@ -12,6 +12,12 @@ Support ticket dashboard for Patchlab. Reads and displays tickets from the share
 
 No HTTP contract between this app and `PatchlabWhatsAppBot`. Both read/write the same SQL table directly, the database is the interface.
 
+## Ticket photos
+
+`PatchlabWhatsAppBot` writes uploaded ticket photos to disk under `TicketPhotos/yyyy/MM/dd/<guid>.<ext>`, relative to wherever it's installed on that machine — only the relative path is stored in SQL. This API serves those files as static content (under `/photos`) so the client can display and link to them, which means `appsettings.json`'s `TicketPhotosRootPath` must be set to the **absolute** path of that `TicketPhotos/` folder on whatever machine this API runs on.
+
+There's no safe default for this — it depends entirely on where `PatchlabWhatsAppBot` happens to be installed on that specific server, which varies per deploy. See `appsettings.Example.json` for the placeholder to fill in.
+
 ## Project structure
 
 PatchlabTicketing/
@@ -23,7 +29,7 @@ PatchlabTicketing/
 **API:**
 
 1. Open `PatchlabTicketing.Api/PatchlabTicketing.Api.slnx` in Visual Studio
-2. Confirm `appsettings.json` connection string points at your local or server SQL instance
+2. Confirm `appsettings.json` connection string points at your local or server SQL instance, and set `TicketPhotosRootPath` to the real absolute path on this machine (see "Ticket photos" below)
 3. Run, should open Swagger at `https://localhost:7168/swagger`
 
 **Client:**
