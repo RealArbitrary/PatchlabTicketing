@@ -36,4 +36,35 @@ jobs:
         run: dotnet publish PatchlabTicketing.Api\PatchlabTicketing.Api.csproj -c Release -o C:\PatchlabTicketing\publish
 
       - name: Start PatchlabTicketing service
-        run: C:\nssm\win64\nssm.exe start PatchlabTicketing
+        shell: powershell
+        run: |
+          $serviceName = "PatchlabTicketing"
+
+          try {
+              & C:\nssm\win64\nssm.exe start $serviceName
+          } catch {
+              Write-Host "nssm start reported an error (expected if it raced SERVICE_START_PENDING): $_"
+          }
+
+          # nssm start checks status immediately after issuing the START control and can
+          # see SERVICE_START_PENDING before the service finishes coming up, exiting 1 on
+          # a service that's actually fine seconds later. Poll real status instead of
+          # trusting that exit code.
+          $timeoutSeconds = 60
+          $intervalSeconds = 2
+          $elapsed = 0
+          $status = ""
+
+          while ($elapsed -lt $timeoutSeconds) {
+              $status = (& C:\nssm\win64\nssm.exe status $serviceName).Trim()
+              Write-Host "$serviceName status: $status (${elapsed}s elapsed)"
+              if ($status -eq "SERVICE_RUNNING") {
+                  Write-Host "$serviceName reached SERVICE_RUNNING."
+                  exit 0
+              }
+              Start-Sleep -Seconds $intervalSeconds
+              $elapsed += $intervalSeconds
+          }
+
+          Write-Error "$serviceName did not reach SERVICE_RUNNING within $timeoutSeconds seconds (last status: $status)."
+          exit 1
