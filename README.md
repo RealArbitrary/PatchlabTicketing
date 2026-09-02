@@ -12,6 +12,24 @@ Support ticket dashboard for Patchlab. Reads and displays tickets from the share
 
 No HTTP contract between this app and `PatchlabWhatsAppBot`. Both read/write the same SQL table directly, the database is the interface.
 
+## Production Infrastructure
+
+**As of 2026-09-02**, this app runs on a new production server, `MULTIPOINT`, migrated from the old shared multi-client production box. Confirmed working there with real production data: `Customers`, `Tickets`, `DeletedTickets`, `TicketComments`, `TicketFeedback`, and `TicketPhotos` rows were migrated via manually-run `INSERT` scripts built from the old server's data export, and the ticket photo files themselves were copied over so `TicketPhotos/` on `MULTIPOINT` matches what those rows point at.
+
+`TicketPhotosRootPath` needs to be set to wherever that copied `TicketPhotos/` folder actually lives on `MULTIPOINT` — this key is documented in `appsettings.Example.json` and in "Ticket photos" below (merged via [#14](https://github.com/RealArbitrary/PatchlabTicketing/pull/14)).
+
+### CI/CD — NOT YET TESTED on new server
+
+`.github/workflows/deploy.yml` has not been validated against `MULTIPOINT` yet — it was written and last confirmed working against the old server, and nothing about it has been re-verified against the new one. On the first real deploy to `MULTIPOINT`, check:
+
+- The NSSM service actually restarts cleanly (the poll/retry logic that absorbs the `SERVICE_START_PENDING` race assumes `nssm status` behaves the same way here as it did on the old server's NSSM install — confirm that holds).
+- Any paths the pipeline or app config reference that assume the old server's install directory layout still resolve correctly on `MULTIPOINT` — particularly `TicketPhotosRootPath` and the publish output path (`C:\PatchlabTicketing\publish`).
+- The SQL connection string in `appsettings.json` still points at a valid, reachable database instance from `MULTIPOINT` — the old server and `MULTIPOINT` are not guaranteed to see the same instance name or network path.
+
+### Migration history
+
+Migrated off the old shared multi-client production box. That server's `CloudflaredTunnel` setup was replicated on `MULTIPOINT` to keep external access working the same way. `PatchlabNgrokSync` was **not** replicated — it was a stale leftover on the old server with no corresponding repo, and was intentionally left behind rather than carried over.
+
 ## Ticket photos
 
 `PatchlabWhatsAppBot` writes uploaded ticket photos to disk under `TicketPhotos/yyyy/MM/dd/<guid>.<ext>`, relative to wherever it's installed on that machine — only the relative path is stored in SQL. This API serves those files as static content (under `/photos`) so the client can display and link to them, which means `appsettings.json`'s `TicketPhotosRootPath` must be set to the **absolute** path of that `TicketPhotos/` folder on whatever machine this API runs on.
